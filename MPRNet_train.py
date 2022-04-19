@@ -9,17 +9,23 @@ import os
 
 FLAGS = easydict.EasyDict({"img_size": 256,
 
-                           "tr_img_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/low_light/",
+                           #"tr_img_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/low_light/",
 
-                           "tr_lab_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/aug_train_images/",
+                           #"tr_lab_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/aug_train_images/",
                            
-                           "tr_txt_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/train_fix.txt",
+                           #"tr_txt_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/CropWeed Field Image Dataset (CWFID)/dataset-1.0/train_fix.txt",
+
+                           "tr_img_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/low_light/",
+
+                           "tr_lab_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/raw_aug_rgb_img/",
+                           
+                           "tr_txt_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/train.txt",
                            
                            "batch_size": 1,
                            
                            "epochs": 50,
                            
-                           "lr": 0.0002,
+                           "lr": 0.0001,
 
                            "train": True,
 
@@ -83,14 +89,24 @@ def tr_func(img_data, lab_data):
     img = tf.io.read_file(img_data)
     img = tf.image.decode_png(img, 3)
     img = tf.image.resize(img, [FLAGS.img_size, FLAGS.img_size])
+    #img = tf.image.random_brightness(img, max_delta=50.)
+    #img = tf.image.random_saturation(img, lower=0.5, upper=1.5)
+    #img = tf.image.random_hue(img, max_delta=0.2)
+    #img = tf.image.random_contrast(img, lower=1., upper=2.)
+    #img = tf.clip_by_value(img, 0, 255)
     #img = tf.image.per_image_standardization(img)
-    img = img / 255.
+    img = (img - tf.keras.backend.min(img)) / (tf.keras.backend.max(img) - tf.keras.backend.min(img))
 
     lab = tf.io.read_file(lab_data)
     lab = tf.image.decode_png(lab, 3)
     lab = tf.image.resize(lab, [FLAGS.img_size, FLAGS.img_size])
+    #lab = tf.image.random_brightness(lab, max_delta=50.)
+    #lab = tf.image.random_saturation(lab, lower=0.5, upper=1.5)
+    #lab = tf.image.random_hue(lab, max_delta=0.2)
+    #lab = tf.image.random_contrast(lab, lower=1., upper=2.)
+    #lab = tf.clip_by_value(lab, 0, 255)
     #lab = tf.image.per_image_standardization(lab)
-    lab = lab / 255.
+    lab = (lab - tf.keras.backend.min(lab)) / (tf.keras.backend.max(lab) - tf.keras.backend.min(lab))
 
     if random() > 0.5:
         img = tf.image.flip_left_right(img)
@@ -173,11 +189,14 @@ def main():
                         restored_image = stage_3[i].numpy()
                         restored_image = (restored_image - np.min(restored_image)) / (np.max(restored_image) - np.min(restored_image))
 
-                        plt.imsave(FLAGS.sample_images + "/original_image_{}step_{}.png".format(count, i), original_image)
+                        plt.imsave(FLAGS.sample_images + "/original_image_{}step_{}.png".format(count, i), original_image * 0.5 + 0.5)
                         plt.imsave(FLAGS.sample_images + "/predict_image_{}step_{}.png".format(count, i), restored_image)
 
 
                 count += 1
+
+            ckpt = tf.train.Checkpoint(model=model,optim=optim)
+            ckpt.save(FLAGS.save_checkpoint + "/" + "MPR_Net.ckpt")
 
 if __name__ == "__main__":
     main()
