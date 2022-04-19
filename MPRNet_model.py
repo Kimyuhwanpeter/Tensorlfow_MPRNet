@@ -165,7 +165,7 @@ def ORSNet(x, encoder_outs, decoder_outs, filters, kernel_size, scale_orsnetfeat
                                    use_bias=False)(decoder_outs2)
     return x
 
-def Unet(inputs_shape=(512, 512, 3), filters=96, reduction=4, scale_unetfeats=48, scale_orsnetfeats=32, num_cab=8):
+def MPRNet(inputs_shape=(512, 512, 3), filters=80, reduction=4, scale_unetfeats=48, scale_orsnetfeats=32, num_cab=8):
 
     h = inputs = tf.keras.Input(inputs_shape)
 
